@@ -1,0 +1,42 @@
+service: tapdef-backend
+
+plugins:
+  - serverless-hooks-plugin
+
+custom:
+  hooks:
+    after:aws:deploy:finalize:cleanup:
+      - scripts/setup.sh ${opt:stage}
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: ${opt:stage}
+  region: us-east-1
+
+  # environment:
+    # DYNAMO_DB_ENDPOINT: https://dynamodb.us-east-1.amazonaws.com
+    # EXAMPLE_TABLE: nopos-${opt:stage}-ExampleTable
+
+  # iamRoleStatements:
+    # TODO: write more fine-grained permissions
+    # - Effect: Allow
+    #   Action:
+    #     - dynamodb:*
+    #   Resource: { "Fn::Join" : ["",["arn:aws:dynamodb:",{"Ref":"AWS::Region"},":*:*"]] }
+
+functions:
+
+  GetWikipediaIntro:
+    handler: lambdas/wikipedia/getIntro.main
+    environment:
+      STAGE: ${opt:stage}
+    events:
+      - http:
+          path: wiki/intro/{article}
+          method: get
+          cors: true
+          request:
+            parameters:
+              paths:
+                article: true
